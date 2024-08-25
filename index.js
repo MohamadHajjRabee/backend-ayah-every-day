@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const db = require('better-sqlite3')('./dataset/quranDB.db',);
+const path = require('path');
+const db = require('better-sqlite3')( path.resolve(__dirname,'dataset/quranDB.db'));
 
 const DATASET_SIZE = 6236
 

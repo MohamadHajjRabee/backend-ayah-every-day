@@ -15,7 +15,11 @@ const updateActiveAyah = () => {
     console.log(inf)
     return randAyah
 }
-app.use('/updateActiveAyah', updateActiveAyah);
+app.get('/updateActiveAyah', (req, res) => {
+    let randAyah = updateActiveAyah();
+    res.status(200).send("Successfully updated!")
+
+});
 app.get('/ayah', (req, res) => {
     let ayah = db.prepare('SELECT * FROM activeAyah').get();
     if(!ayah.ayahId){

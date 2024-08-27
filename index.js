@@ -2,26 +2,37 @@ const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
 const {updateActiveAyah} = require('./updateActiveAyah.js')
-const fs = require('fs')
+const { Pool } = require('pg');
 
 dotenv.config();
-const DATASET_PATH = path.resolve(__dirname, 'dataset/quran.json')
+
+const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/updateActiveAyah', (req, res) => {
-    updateActiveAyah();
-    res.status(200).send("Successfully updated!")
+    updateActiveAyah()
+        .then(r => res.status(200).send(r))
+        .catch(e => res.status(200).send("Error: " + e.message));
+
 });
 
-app.get('/ayah', (req, res) => {
-    const {activeAyahId, quran} = JSON.parse(fs.readFileSync(DATASET_PATH, 'utf8'))
-    console.log(activeAyahId)
-    const ayah = quran.find(ayah => {
-        return ayah.id === activeAyahId
-    })
-    console.log(ayah)
-    res.status(200).json({ ayah });
+app.get('/ayah', async (req, res) => {
+    try {
+        const {rows : dataRows} = await pool.query('SELECT * FROM data')
+        if(dataRows[0]){
+            const {id} = dataRows[0]
+            const {rows : quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
+            if(quranRows[0]){
+                res.status(200).json(quranRows[0]);
+            }
+        }
+    }catch (e) {
+        res.status(500).json({message: 'Error: ' + e.message})
+    }
 });
 
 app.listen(PORT, () => {

@@ -2,7 +2,11 @@ const express = require('express');
 const dotenv = require('dotenv');
 const {updateActiveAyah} = require('./updateActiveAyah.js')
 const { Pool } = require('pg');
+const cors = require('cors')
+
 const CRON_SECRET = process.env.CRON_SECRET
+const PORT = process.env.PORT || 3000;
+
 
 dotenv.config();
 
@@ -11,7 +15,7 @@ const pool = new Pool({
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors())
 
 app.get('/updateActiveAyah', (req, res) => {
     console.log(req.headers)

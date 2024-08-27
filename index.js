@@ -1,10 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const {updateActiveAyah} = require('./updateActiveAyah.js')
 const fs = require('fs')
 
 dotenv.config();
-
+const DATASET_PATH = path.resolve(__dirname, 'dataset/quran.json')
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,7 +15,7 @@ app.get('/updateActiveAyah', (req, res) => {
 });
 
 app.get('/ayah', (req, res) => {
-    const {activeAyahId, quran} = JSON.parse(fs.readFileSync('./dataset/quran.json', 'utf8'))
+    const {activeAyahId, quran} = JSON.parse(fs.readFileSync(DATASET_PATH, 'utf8'))
     console.log(activeAyahId)
     const ayah = quran.find(ayah => {
         return ayah.id === activeAyahId

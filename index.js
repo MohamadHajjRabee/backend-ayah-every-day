@@ -17,10 +17,11 @@ app.get('/updateActiveAyah', (req, res) => {
     console.log(req.headers)
     if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
         res.status(401).json({message: 'Unauthorized'})
+    }else{
+        updateActiveAyah()
+            .then(r => res.status(200).send(r))
+            .catch(e => res.status(500).send("Error: " + e.message));
     }
-    updateActiveAyah()
-        .then(r => res.status(200).send(r))
-        .catch(e => res.status(500).send("Error: " + e.message));
 });
 
 app.get('/ayah', async (req, res) => {

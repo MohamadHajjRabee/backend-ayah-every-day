@@ -1,37 +1,28 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const path = require('path');
-const db = require('better-sqlite3')( path.join(__dirname,'dataset/quranDB.db'));
-
-const DATASET_SIZE = 6236
+const {updateActiveAyah} = require('./updateActiveAyah.js')
+const fs = require('fs')
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const updateActiveAyah = () => {
-    const randAyah = Math.floor(Math.random() * DATASET_SIZE)
-    const inf = db.prepare('UPDATE activeAyah SET ayahId = ? WHERE id = 1').run(randAyah)
-    console.log(inf)
-    return randAyah
-}
+
 app.get('/updateActiveAyah', (req, res) => {
-    let randAyah = updateActiveAyah();
+    updateActiveAyah();
     res.status(200).send("Successfully updated!")
-
 });
-app.get('/ayah', (req, res) => {
-    let ayah = db.prepare('SELECT * FROM activeAyah').get();
-    if(!ayah.ayahId){
-        ayah = updateActiveAyah()
-    }
 
-    const data = db.prepare('SELECT * FROM quran WHERE id = ?').get(ayah.ayahId)
-    console.log(data)
-    res.status(200).json({ data });
+app.get('/ayah', (req, res) => {
+    const {activeAyahId, quran} = JSON.parse(fs.readFileSync('./dataset/quran.json', 'utf8'))
+    console.log(activeAyahId)
+    const ayah = quran.find(ayah => {
+        return ayah.id === activeAyahId
+    })
+    console.log(ayah)
+    res.status(200).json({ ayah });
 });
 
 app.listen(PORT, () => {
-
     console.log(`Server is running on port ${PORT}`);
 });

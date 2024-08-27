@@ -1,8 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const path = require('path');
 const {updateActiveAyah} = require('./updateActiveAyah.js')
 const { Pool } = require('pg');
+const CRON_SECRET = process.env.CRON_SECRET
 
 dotenv.config();
 
@@ -14,10 +14,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/updateActiveAyah', (req, res) => {
+    console.log(req.headers)
+    if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
+        res.status(401).json({message: 'Unauthorized'})
+    }
     updateActiveAyah()
         .then(r => res.status(200).send(r))
-        .catch(e => res.status(200).send("Error: " + e.message));
-
+        .catch(e => res.status(500).send("Error: " + e.message));
 });
 
 app.get('/ayah', async (req, res) => {

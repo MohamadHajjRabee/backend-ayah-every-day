@@ -50,8 +50,8 @@ app.get('/postAyahTwitter', async (req, res) => {
                 const {rows : quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
                 const ayah = quranRows[0]
                 if(ayah){
-                    const {ayah_ar, ayah_en} = ayah
-                    await twitterClient.v2.tweet(`${ayah_ar}\n${ayah_en}`);
+                    const {ayah_ar} = ayah
+                    await twitterClient.v2.tweet(ayah_ar);
                     res.status(201).send('Ayah posted!');
                 }
             }

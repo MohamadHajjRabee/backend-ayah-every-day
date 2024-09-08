@@ -16,10 +16,6 @@
     {
       "path": "/updateActiveAyah",
       "schedule": "10 1 * * *"
-    },
-    {
-      "path": "/postAyahTwitter",
-      "schedule": "30 1 * * *"
     }
   ]
 }

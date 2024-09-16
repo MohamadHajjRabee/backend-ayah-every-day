@@ -13,7 +13,6 @@ This is the backend server for the **Ayah Every Day** project. It provides a pub
 
 - **Backend**: Node.js
 - **Database**: Postgres (hosted on Vercel)
-- **Dataset**: [The Quran Dataset on Kaggle](https://www.kaggle.com/datasets/imrankhan197/the-quran-dataset)
 
 ## API Endpoints
 
@@ -36,7 +35,8 @@ Returns the ayah of the day in JSON format. The response structure is as follows
 
 ## Database
 
-The ayah data is sourced from [this Kaggle dataset](https://www.kaggle.com/datasets/imrankhan197/the-quran-dataset).
+The main data is sourced from [this Kaggle dataset](https://www.kaggle.com/datasets/imrankhan197/the-quran-dataset).
+The Deutsch Quran ayahs is sourced from [this kaggle dataset](https://www.kaggle.com/datasets/yasirabdaali/the-holy-quran-in-44-languages?select=german.aburida.sql)
 
 ## Usage
 

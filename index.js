@@ -96,7 +96,7 @@ app.get('/updateActiveAyah', async (req, res) => {
             }
 
         } catch (e) {
-            res.status(e.status).send({message: 'Error: ' + e.message})
+            res.status(e.status || 500).send({message: 'Error: ' + e.message})
 
         }
     }
@@ -113,7 +113,7 @@ app.get('/ayah', async (req, res) => {
             }
         }
     }catch (e) {
-        res.status(e.status).json({message: 'Error: ' + e.message})
+        res.status(e.status || 500).json({message: 'Error: ' + e.message})
     }
 });
 

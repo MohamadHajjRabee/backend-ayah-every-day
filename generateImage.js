@@ -82,7 +82,8 @@ const generateImage = async (image, ayah) => {
         });
         return canvas.toBuffer('image/jpeg');
     } catch (error) {
-        console.error('Error creating image: ', error);
+        throw new Error('Error: ' + error.message)
+
     }
 }
 

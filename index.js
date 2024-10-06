@@ -67,7 +67,6 @@ app.get('/updateActiveAyah', async (req, res) => {
     }else {
         try {
             // const updateRes = await updateActiveAyah()
-            console.log(await cloudinary.api.ping())
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {

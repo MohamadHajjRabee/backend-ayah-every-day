@@ -1,6 +1,5 @@
-const {loadImage, createCanvas, registerFont} = require("canvas");
-const {resolve} = require("path");
-
+const {loadImage, createCanvas, GlobalFonts} = require("@napi-rs/canvas");
+const {join} = require("path");
 function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -40,7 +39,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
 const generateImage = async (image, ayah) => {
 
     try {
-        registerFont(resolve('./ScheherazadeNew-Regular.ttf'), { family: 'Scheherazade New'})
+        GlobalFonts.registerFromPath(join(__dirname,'ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
         const background = await loadImage(image);
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');

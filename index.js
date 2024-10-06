@@ -80,6 +80,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const randomImage = result.resources[randomIndex] || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 const imageBuffer = await generateImage(randomImage.secure_url, ayah.ayah_ar)
                 const base64Image = imageBuffer.toString('base64')
+                console.log(base64Image[0])
                 const mediaUploadResponse = await twitterClient.post('media/upload', { media_data: base64Image });
                 const mediaIdStr = mediaUploadResponse.data.media_id_string;
                 const tweet = {

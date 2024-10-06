@@ -67,7 +67,7 @@ app.get('/updateActiveAyah', async (req, res) => {
         res.status(401).json({message: 'Unauthorized'})
     }else {
         try {
-            // const updateRes = await updateActiveAyah()
+            const updateRes = await updateActiveAyah()
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {
@@ -79,9 +79,8 @@ app.get('/updateActiveAyah', async (req, res) => {
             const result = await cloudinary.search
                 .expression(`folder:"Ayah Every Day"`)
                 .execute();
-            const imageCount = result.total_count;
-            if (imageCount > 0 && ayah) {
-                const randomIndex = Math.floor(Math.random() * imageCount);
+            if (result && result.total_count > 0 && ayah) {
+                const randomIndex = Math.floor(Math.random() * result.total_count);
                 const randomImage = result.resources[randomIndex];
                 const imageBuffer = await generateImage(randomImage.secure_url, ayah.ayah_ar)
                 const base64Image = imageBuffer.toString('base64')

@@ -1,5 +1,5 @@
 const {loadImage, createCanvas, registerFont} = require("canvas");
-const {join} = require("path");
+const {resolve} = require("path");
 
 function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
@@ -40,7 +40,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
 const generateImage = async (image, ayah) => {
 
     try {
-        registerFont(join(__dirname, 'ScheherazadeNew-Medium.ttf'), { family: 'ScheherazadeNew-Medium' })
+        registerFont(resolve('./ScheherazadeNew-Regular.ttf'), { family: 'Scheherazade New'})
         const background = await loadImage(image);
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');
@@ -52,7 +52,7 @@ const generateImage = async (image, ayah) => {
         const lineHeight = fontSize * 2.2;
         const padding = 20;
         const radius = 25;
-        ctx.font = `${fontSize}px "ScheherazadeNew-Medium"`;
+        ctx.font = `${fontSize}px "Scheherazade New"`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 

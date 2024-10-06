@@ -11,6 +11,15 @@ const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
 
 
+const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+});
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const userClient = new TwitterApi({
     appKey:  process.env.API_KEY,
@@ -23,16 +32,6 @@ const bearer = new TwitterApi(process.env.BEARER_TOKEN);
 const twitterClient = userClient.readWrite;
 const twitterBearer = bearer.readOnly;
 
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-const pool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-});
 
 const app = express();
 app.use(cors())
@@ -68,6 +67,7 @@ app.get('/updateActiveAyah', async (req, res) => {
     }else {
         try {
             // const updateRes = await updateActiveAyah()
+            console.log(await cloudinary.api.ping())
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {
@@ -75,13 +75,10 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const {rows: quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
                 ayah = quranRows[0]
             }
-
-            const result = await cloudinary.search
-                .expression(`folder:"Ayah Every Day"`)
-                .execute();
+            const result = await cloudinary.search.expression(`folder:"Ayah Every Day"`).execute()
             if (result && result.total_count > 0 && ayah) {
                 const randomIndex = Math.floor(Math.random() * result.total_count);
-                const randomImage = result.resources[randomIndex];
+                const randomImage = result.resources[randomIndex] || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 const imageBuffer = await generateImage(randomImage.secure_url, ayah.ayah_ar)
                 const base64Image = imageBuffer.toString('base64')
                 const mediaUploadResponse = await twitterClient.post('media/upload', { media_data: base64Image });

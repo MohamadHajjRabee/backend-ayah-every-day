@@ -67,7 +67,7 @@ app.get('/updateActiveAyah', async (req, res) => {
         res.status(401).json({message: 'Unauthorized'})
     }else {
         try {
-            const updateRes = await updateActiveAyah()
+            // const updateRes = await updateActiveAyah()
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {

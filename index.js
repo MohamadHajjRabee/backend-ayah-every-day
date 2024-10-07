@@ -85,7 +85,8 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
                 console.log(imageBuffer)
                 console.log('Uploading image to twitter media')
-                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer);
+                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: 'image/jpeg'});
+                console.log(mediaUploadResponse)
                 console.log('Uploaded image to twitter media')
                 const tweet = {
                     media: {

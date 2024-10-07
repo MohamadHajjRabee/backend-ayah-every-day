@@ -67,6 +67,7 @@ app.get('/updateActiveAyah', async (req, res) => {
     }else {
         try {
             // const updateRes = await updateActiveAyah()
+            console.log('Fetching ayah')
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {
@@ -74,17 +75,24 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const {rows: quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
                 ayah = quranRows[0]
             }
+            console.log('Ayah Fetched')
             const result = await cloudinary.search.expression(`folder:"Ayah Every Day"`).execute()
             if (result && result.total_count > 0 && ayah) {
                 const randomIndex = Math.floor(Math.random() * result.total_count);
-                const randomImage = result.resources[randomIndex] || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
-                const imageBuffer = await generateImage(randomImage.secure_url, ayah.ayah_ar)
+                const randomImage = result.resources[randomIndex].secure_url || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
+                console.log(randomImage)
+                console.log(ayah.ayah_ar)
+                const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
+                console.log(imageBuffer)
+                console.log('Uploading image to twitter media')
                 const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer);
+                console.log('Uploaded image to twitter media')
                 const tweet = {
                     media: {
                         media_ids: [mediaUploadResponse],
                     }
                 };
+                console.log('Uploading tweet to twitter')
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
                 res.send({message: 'image uploaded successfully'})
 

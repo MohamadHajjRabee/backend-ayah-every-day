@@ -1,4 +1,5 @@
 const {loadImage, createCanvas, GlobalFonts} = require("@napi-rs/canvas");
+const {writeFileSync} = require("fs");
 function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -82,7 +83,9 @@ const generateImage = async (image, ayah) => {
             ctx.fillStyle = '#ffffff';
             ctx.fillText(line, textX, yPos);
         });
-        return canvas.toBuffer('image/jpeg');
+        const imageBuffer = canvas.toBuffer('image/jpeg')
+        writeFileSync('./ah.jpg', imageBuffer)
+        return imageBuffer;
     } catch (error) {
         throw new Error('Error: ' + error.message)
 

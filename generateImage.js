@@ -1,5 +1,6 @@
 const {loadImage, createCanvas, GlobalFonts} = require("@napi-rs/canvas");
 const {writeFileSync} = require("fs");
+const {join, resolve} = require("path");
 function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -40,7 +41,7 @@ const generateImage = async (image, ayah) => {
 
     try {
         console.log('Loading Font');
-        GlobalFonts.registerFromPath('ScheherazadeNew-Regular.ttf', 'Scheherazade New')
+        GlobalFonts.registerFromPath(resolve('./ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
         console.log('Font Loaded');
         console.log('Loading Image')
         const background = await loadImage(image);
@@ -83,9 +84,7 @@ const generateImage = async (image, ayah) => {
             ctx.fillStyle = '#ffffff';
             ctx.fillText(line, textX, yPos);
         });
-        const imageBuffer = canvas.toBuffer('image/jpeg')
-        writeFileSync('./ah.jpg', imageBuffer)
-        return imageBuffer;
+        return canvas.toBuffer('image/jpeg');
     } catch (error) {
         throw new Error('Error: ' + error.message)
 

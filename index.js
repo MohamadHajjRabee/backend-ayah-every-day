@@ -62,9 +62,9 @@ app.use(cors())
 // });
 
 app.get('/updateActiveAyah', async (req, res) => {
-    if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
-        res.status(401).json({message: 'Unauthorized'})
-    }else {
+    // if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
+    //     res.status(401).json({message: 'Unauthorized'})
+    // }else {
         try {
             // const updateRes = await updateActiveAyah()
             console.log('Fetching ayah')
@@ -76,9 +76,14 @@ app.get('/updateActiveAyah', async (req, res) => {
                 ayah = quranRows[0]
             }
             console.log('Ayah Fetched')
-            const result = await cloudinary.search.expression(`folder:"Ayah Every Day"`).execute()
-            if (result && result.total_count > 0 && ayah) {
-                const randomIndex = Math.floor(Math.random() * result.total_count);
+            const result = await cloudinary.api.resources({
+                type: 'upload',
+                prefix: 'Ayah Every Day',
+                max_results: 100
+            })
+            console.log(result)
+            if (result && result.resources.length > 0 && ayah) {
+                const randomIndex = Math.floor(Math.random() * result.resources.length);
                 const randomImage = result.resources[randomIndex].secure_url || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 console.log(randomImage)
                 console.log(ayah.ayah_ar)
@@ -103,7 +108,7 @@ app.get('/updateActiveAyah', async (req, res) => {
             res.status(e.status || 500).send({message: 'Error: ' + e.message})
 
         }
-    }
+    // }
 });
 
 app.get('/ayah', async (req, res) => {

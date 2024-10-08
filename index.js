@@ -62,11 +62,11 @@ app.use(cors())
 // });
 
 app.get('/updateActiveAyah', async (req, res) => {
-    // if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
-    //     res.status(401).json({message: 'Unauthorized'})
-    // }else {
+    if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
+        res.status(401).json({message: 'Unauthorized'})
+    }else {
         try {
-            // const updateRes = await updateActiveAyah()
+            const updateRes = await updateActiveAyah()
             console.log('Fetching ayah')
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
@@ -91,7 +91,6 @@ app.get('/updateActiveAyah', async (req, res) => {
                 console.log(imageBuffer)
                 console.log('Uploading image to twitter media')
                 const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: 'image/jpeg'});
-                console.log(mediaUploadResponse)
                 console.log('Uploaded image to twitter media')
                 const tweet = {
                     media: {
@@ -101,14 +100,11 @@ app.get('/updateActiveAyah', async (req, res) => {
                 console.log('Uploading tweet to twitter')
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
                 res.send({message: 'image uploaded successfully'})
-
             }
-
         } catch (e) {
             res.status(e.status || 500).send({message: 'Error: ' + e.message})
-
         }
-    // }
+    }
 });
 
 app.get('/ayah', async (req, res) => {

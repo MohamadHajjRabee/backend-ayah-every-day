@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const {updateActiveAyah} = require('./updateActiveAyah.js')
 const { Pool } = require('pg');
 const cors = require('cors')
-const { TwitterApi } = require('twitter-api-v2');
+const { TwitterApi, EUploadMimeType} = require('twitter-api-v2');
 const {generateImage} = require('./generateImage.js')
 const cloudinary = require ('cloudinary').v2;
 dotenv.config();
@@ -90,7 +90,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
                 console.log(imageBuffer)
                 console.log('Uploading image to twitter media')
-                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: 'image/jpeg'});
+                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
                 console.log('Uploaded image to twitter media')
                 const tweet = {
                     media: {

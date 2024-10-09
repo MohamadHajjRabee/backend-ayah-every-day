@@ -1,6 +1,7 @@
 const {loadImage, createCanvas, GlobalFonts} = require("@napi-rs/canvas");
-const {writeFileSync} = require("fs");
-const {join, resolve} = require("path");
+const { resolve} = require("path");
+const sharp = require('sharp');
+const MAX_SIZE = 5 * 1024 * 1024;
 function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -35,6 +36,14 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
     ctx.fill();
+}
+async function compressImage(imageBuffer, quality){
+    const compressedBuffer = await sharp(imageBuffer).jpeg({quality}).toBuffer()
+    if(compressedBuffer.byteLength > MAX_SIZE){
+        return await compressImage(compressedBuffer, quality - 10)
+    }else{
+        return compressedBuffer
+    }
 }
 
 const generateImage = async (image, ayah) => {
@@ -84,7 +93,14 @@ const generateImage = async (image, ayah) => {
             ctx.fillStyle = '#ffffff';
             ctx.fillText(line, textX, yPos);
         });
-        return canvas.toBuffer('image/jpeg');
+        const imageBuffer = canvas.toBuffer('image/jpeg');
+        const imageSize = imageBuffer.byteLength;
+        console.log(imageSize / (1024 * 1024))
+        if(imageSize > MAX_SIZE) {
+            return await compressImage(imageBuffer, 100);
+        }else{
+            return imageBuffer
+        }
     } catch (error) {
         throw new Error('Error: ' + error.message)
 

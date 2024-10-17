@@ -49,19 +49,15 @@ async function compressImage(imageBuffer, quality){
 const generateImage = async (image, ayah) => {
 
     try {
-        console.log('Loading Font');
         GlobalFonts.registerFromPath(resolve('./ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
-        console.log('Font Loaded');
-        console.log('Loading Image')
         const background = await loadImage(image);
-        console.log('image Loaded')
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(background, 0, 0, background.width, background.height);
 
         const fontSize = Math.floor(background.width * 0.05)
         const text = ayah
-        const maxWidth = background.width - 100;
+        const maxWidth = background.width * 0.9;
         const lineHeight = fontSize * 2.2;
         const padding = 20;
         const radius = 25;
@@ -95,7 +91,6 @@ const generateImage = async (image, ayah) => {
         });
         const imageBuffer = canvas.toBuffer('image/jpeg');
         const imageSize = imageBuffer.byteLength;
-        console.log(imageSize / (1024 * 1024))
         if(imageSize > MAX_SIZE) {
             return await compressImage(imageBuffer, 100);
         }else{

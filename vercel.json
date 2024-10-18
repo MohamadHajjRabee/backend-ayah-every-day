@@ -2,8 +2,8 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "index.js"
+      "source": "/(.*)",
+      "destination": "/api"
     }
   ],
   "crons": [
@@ -13,8 +13,8 @@
     }
   ],
   "functions": {
-    "*.js": {
-      "maxDuration": 60
+    "api/*.js": {
+      "maxDuration": 30
     }
   }
 }

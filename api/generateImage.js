@@ -48,7 +48,7 @@ async function compressImage(imageBuffer, quality){
 const generateImage = async (image, ayah) => {
 
     try {
-        GlobalFonts.registerFromPath(resolve('./../ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
+        GlobalFonts.registerFromPath(resolve('./ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
         const background = await loadImage(image);
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');

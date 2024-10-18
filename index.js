@@ -45,7 +45,7 @@ app.get('/updateActiveAyah', async (req, res) => {
         res.status(401).json({message: 'Unauthorized'})
     }else {
         try {
-            const updateRes = await updateActiveAyah()
+            // const updateRes = await updateActiveAyah()
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {
@@ -62,13 +62,13 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const randomIndex = Math.floor(Math.random() * result.resources.length);
                 const randomImage = result.resources[randomIndex].secure_url || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
-                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
-                const tweet = {
-                    media: {
-                        media_ids: [mediaUploadResponse],
-                    }
-                };
-                const tweetResponse = await twitterClient.v2.tweet(tweet);
+                // const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
+                // const tweet = {
+                //     media: {
+                //         media_ids: [mediaUploadResponse],
+                //     }
+                // };
+                // const tweetResponse = await twitterClient.v2.tweet(tweet);
                 console.log('submitting insta image')
                 const instagramResponse = await submitInstagramImage(imageBuffer)
                 console.log('submitted insta image')

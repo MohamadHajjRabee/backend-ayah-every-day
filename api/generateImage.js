@@ -66,7 +66,7 @@ const generateImage = async (image, ayah) => {
         const {maxLength, lines} = wrapText(ctx, text, maxWidth);
         const backgroundWidth = maxLength;
 
-        let padding = 0;
+        const padding = 20;
         const textBlockHeight = lines.length * lineHeight + padding;
         const textBlockWidth = backgroundWidth + padding;
 

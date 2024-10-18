@@ -19,16 +19,16 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// const userClient = new TwitterApi({
-//     appKey:  process.env.API_KEY,
-//     appSecret:  process.env.API_SECRET,
-//     accessToken:  process.env.ACCESS_TOKEN,
-//     accessSecret:  process.env.ACCESS_SECRET,
-// });
-//
-// const bearer = new TwitterApi(process.env.BEARER_TOKEN);
-// const twitterClient = userClient.readWrite;
-// const twitterBearer = bearer.readOnly;
+const userClient = new TwitterApi({
+    appKey:  process.env.API_KEY,
+    appSecret:  process.env.API_SECRET,
+    accessToken:  process.env.ACCESS_TOKEN,
+    accessSecret:  process.env.ACCESS_SECRET,
+});
+
+const bearer = new TwitterApi(process.env.BEARER_TOKEN);
+const twitterClient = userClient.readWrite;
+const twitterBearer = bearer.readOnly;
 
 
 const app = express();
@@ -40,7 +40,7 @@ app.get('/updateActiveAyah', async (req, res) => {
         res.status(401).json({message: 'Unauthorized'})
     }else {
         try {
-            // const updateRes = await updateActiveAyah()
+            const updateRes = await updateActiveAyah()
             const {rows: dataRows} = await pool.query('SELECT * FROM data')
             let ayah;
             if (dataRows[0]) {
@@ -58,13 +58,13 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const randomImage = result.resources[randomIndex].secure_url || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
 
-                // const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
-                // const tweet = {
-                //     media: {
-                //         media_ids: [mediaUploadResponse],
-                //     }
-                // };
-                // const tweetResponse = await twitterClient.v2.tweet(tweet);
+                const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
+                const tweet = {
+                    media: {
+                        media_ids: [mediaUploadResponse],
+                    }
+                };
+                const tweetResponse = await twitterClient.v2.tweet(tweet);
                 const instagramResponse = await submitInstagramImage(imageBuffer, ayah.ayah_en)
                 res.send({message: 'image uploaded successfully'})
             }

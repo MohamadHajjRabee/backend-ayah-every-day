@@ -17,5 +17,10 @@
       "path": "/updateActiveAyah",
       "schedule": "10 1 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "*.js": {
+      "maxDuration": 60
+    }
+  }
 }

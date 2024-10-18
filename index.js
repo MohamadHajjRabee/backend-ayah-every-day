@@ -9,8 +9,7 @@ const cloudinary = require ('cloudinary').v2;
 dotenv.config();
 const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
-const { IgApiClient } = require('instagram-private-api');
-const {generateStoryImage} = require("./generateStoryImage");
+const {submitInstagramImage} = require("./submitInstagramImage");
 
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
@@ -70,20 +69,9 @@ app.get('/updateActiveAyah', async (req, res) => {
                     }
                 };
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
-
-                const ig = new IgApiClient();
-                ig.state.generateDevice(process.env.INSTAGRAM_USERNAME);
-                await ig.account.login(process.env.INSTAGRAM_USERNAME, process.env.INSTAGRAM_PASSWORD);
-
-                await ig.publish.photo({
-                    file: imageBuffer,
-                    caption: ayah.ayah_en
-                });
-                const storyImageBuffer = await generateStoryImage(imageBuffer)
-                await ig.publish.story({
-                    file: storyImageBuffer,
-                });
-
+                console.log('submitting insta image')
+                const instagramResponse = await submitInstagramImage(imageBuffer)
+                console.log('submitted insta image')
                 res.send({message: 'image uploaded successfully'})
             }
         } catch (e) {

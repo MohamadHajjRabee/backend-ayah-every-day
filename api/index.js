@@ -9,7 +9,6 @@ const cloudinary = require ('cloudinary').v2;
 const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
 const {submitInstagramImage} = require("./submitInstagramImage");
-
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
 });
@@ -30,7 +29,7 @@ cloudinary.config({
 // const bearer = new TwitterApi(process.env.BEARER_TOKEN);
 // const twitterClient = userClient.readWrite;
 // const twitterBearer = bearer.readOnly;
-//
+
 
 const app = express();
 app.use(cors())
@@ -47,7 +46,6 @@ app.get('/updateActiveAyah', async (req, res) => {
             if (dataRows[0]) {
                 const {id} = dataRows[0]
                 const {rows: quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
-                console.log(quranRows)
                 ayah = quranRows[0]
             }
             const result = await cloudinary.api.resources({
@@ -59,6 +57,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 const randomIndex = Math.floor(Math.random() * result.resources.length);
                 const randomImage = result.resources[randomIndex].secure_url || 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
                 const imageBuffer = await generateImage(randomImage, ayah.ayah_ar)
+
                 // const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, {mimeType: EUploadMimeType.Jpeg});
                 // const tweet = {
                 //     media: {
@@ -66,9 +65,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 //     }
                 // };
                 // const tweetResponse = await twitterClient.v2.tweet(tweet);
-                console.log('submitting insta image')
                 const instagramResponse = await submitInstagramImage(imageBuffer, ayah.ayah_en)
-                console.log('submitted insta image')
                 res.send({message: 'image uploaded successfully'})
             }
         } catch (e) {

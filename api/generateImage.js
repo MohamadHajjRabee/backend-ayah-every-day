@@ -6,12 +6,10 @@ function wrapText(ctx, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
     let line = '';
-
     for (let n = 0; n < words.length; n++) {
         const testLine = line + words[n] + ' ';
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
-
         if (testWidth > maxWidth && n > 0) {
             lines.push(line);
             line = words[n] + ' ';
@@ -20,7 +18,8 @@ function wrapText(ctx, text, maxWidth) {
         }
     }
     lines.push(line);
-    return lines;
+    const maxLength = Math.max(...lines.map(str => ctx.measureText(str).width));
+    return {maxLength, lines};
 }
 
 function drawRoundedRect(ctx, x, y, width, height, radius) {
@@ -49,7 +48,7 @@ async function compressImage(imageBuffer, quality){
 const generateImage = async (image, ayah) => {
 
     try {
-        GlobalFonts.registerFromPath(resolve('./ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
+        GlobalFonts.registerFromPath(resolve('./../ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
         const background = await loadImage(image);
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');
@@ -59,15 +58,15 @@ const generateImage = async (image, ayah) => {
         const text = ayah
         const maxWidth = background.width * 0.9;
         const lineHeight = fontSize * 2.2;
-        const padding = 40;
         const radius = 25;
         ctx.font = `${fontSize}px "Scheherazade New"`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const lines = wrapText(ctx, text, maxWidth);
-        const backgroundWidth = ctx.measureText(lines[0]).width;
+        const {maxLength, lines} = wrapText(ctx, text, maxWidth);
+        const backgroundWidth = maxLength;
 
+        let padding = 0;
         const textBlockHeight = lines.length * lineHeight + padding;
         const textBlockWidth = backgroundWidth + padding;
 
@@ -87,7 +86,7 @@ const generateImage = async (image, ayah) => {
         lines.forEach((line, index) => {
             const yPos = textY + (index * lineHeight);
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(line, textX, yPos);
+            ctx.fillText(line, textX + 15, yPos);
         });
         const imageBuffer = canvas.toBuffer('image/jpeg');
         const imageSize = imageBuffer.byteLength;

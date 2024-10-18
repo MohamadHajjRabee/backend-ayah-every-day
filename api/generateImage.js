@@ -59,7 +59,7 @@ const generateImage = async (image, ayah) => {
         const text = ayah
         const maxWidth = background.width * 0.9;
         const lineHeight = fontSize * 2.2;
-        const padding = 20;
+        const padding = 40;
         const radius = 25;
         ctx.font = `${fontSize}px "Scheherazade New"`;
         ctx.textAlign = 'center';

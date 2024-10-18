@@ -6,12 +6,6 @@
       "destination": "index.js"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ],
   "crons": [
     {
       "path": "/updateActiveAyah",

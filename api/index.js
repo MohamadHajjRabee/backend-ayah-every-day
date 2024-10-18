@@ -6,7 +6,6 @@ const cors = require('cors')
 const { TwitterApi, EUploadMimeType} = require('twitter-api-v2');
 const {generateImage} = require('./generateImage.js')
 const cloudinary = require ('cloudinary').v2;
-dotenv.config();
 const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
 const {submitInstagramImage} = require("./submitInstagramImage");
@@ -21,24 +20,21 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const userClient = new TwitterApi({
-    appKey:  process.env.API_KEY,
-    appSecret:  process.env.API_SECRET,
-    accessToken:  process.env.ACCESS_TOKEN,
-    accessSecret:  process.env.ACCESS_SECRET,
-});
-
-const bearer = new TwitterApi(process.env.BEARER_TOKEN);
-const twitterClient = userClient.readWrite;
-const twitterBearer = bearer.readOnly;
-
+// const userClient = new TwitterApi({
+//     appKey:  process.env.API_KEY,
+//     appSecret:  process.env.API_SECRET,
+//     accessToken:  process.env.ACCESS_TOKEN,
+//     accessSecret:  process.env.ACCESS_SECRET,
+// });
+//
+// const bearer = new TwitterApi(process.env.BEARER_TOKEN);
+// const twitterClient = userClient.readWrite;
+// const twitterBearer = bearer.readOnly;
+//
 
 const app = express();
 app.use(cors())
 
-app.get('/', async (req, res) => {
-
-})
 
 app.get('/updateActiveAyah', async (req, res) => {
     if(req.headers['authorization'] !== `Bearer ${CRON_SECRET}`){
@@ -51,6 +47,7 @@ app.get('/updateActiveAyah', async (req, res) => {
             if (dataRows[0]) {
                 const {id} = dataRows[0]
                 const {rows: quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
+                console.log(quranRows)
                 ayah = quranRows[0]
             }
             const result = await cloudinary.api.resources({
@@ -70,7 +67,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 // };
                 // const tweetResponse = await twitterClient.v2.tweet(tweet);
                 console.log('submitting insta image')
-                const instagramResponse = await submitInstagramImage(imageBuffer)
+                const instagramResponse = await submitInstagramImage(imageBuffer, ayah.ayah_en)
                 console.log('submitted insta image')
                 res.send({message: 'image uploaded successfully'})
             }

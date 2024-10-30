@@ -65,7 +65,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                     }
                 };
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
-                const instagramResponse = await submitInstagramImage(imageBuffer, ayah.ayah_en)
+                const instagramResponse = await submitInstagramImage(imageBuffer, ayah)
                 res.send({message: 'image uploaded successfully'})
             }
         } catch (e) {

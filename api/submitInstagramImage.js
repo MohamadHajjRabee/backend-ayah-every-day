@@ -7,7 +7,7 @@ const submitInstagramImage = async (imageBuffer, ayah) => {
 
     await ig.publish.photo({
         file: imageBuffer,
-        caption: ayah
+        caption: `${ayah.ayah_en}\n${ayah.surah_name_ar} / ${ayah.surah_name_roman} - ${ayah.ayah_no_surah}`
     });
     const storyImageBuffer = await generateStoryImage(imageBuffer)
     await ig.publish.story({

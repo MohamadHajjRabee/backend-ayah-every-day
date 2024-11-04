@@ -53,8 +53,8 @@ const generateImage = async (image, ayah) => {
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(background, 0, 0, background.width, background.height);
-
-        const fontSize = Math.floor(background.width * 0.05)
+        const fontSizeScale = ayah.length > 200 ? 0.035 : 0.05
+        const fontSize = Math.floor(background.width * fontSizeScale)
         const text = ayah
         const maxWidth = background.width * 0.9;
         const lineHeight = fontSize * 2.2;

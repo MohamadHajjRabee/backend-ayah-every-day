@@ -10,6 +10,7 @@ const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
 const {submitInstagramImage} = require("./submitInstagramImage");
 const {generateStoryImage} = require("./generateStoryImage");
+const {uploadImageToImgur} = require("./uploadImageToImgur");
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
 });
@@ -52,7 +53,7 @@ app.get('/updateActiveAyah', async (req, res) => {
             const result = await cloudinary.api.resources({
                 type: 'upload',
                 prefix: 'Ayah Every Day',
-                max_results: 100
+                max_results: 100,
             })
             if (result && result.resources.length > 0 && ayah) {
                 const randomIndex = Math.floor(Math.random() * result.resources.length);
@@ -66,9 +67,13 @@ app.get('/updateActiveAyah', async (req, res) => {
                     }
                 };
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
-                const instagramPostResponse = await submitInstagramImage(imageBuffer, ayah, false)
+
+                const postImageURL = await uploadImageToImgur(imageBuffer);
+                const instagramPostResponse = await submitInstagramImage(postImageURL, ayah, false)
+
                 const storyImageBuffer = await generateStoryImage(imageBuffer)
-                const instagramStoryResponse = await submitInstagramImage(storyImageBuffer, ayah, true)
+                const storyImageURL = await uploadImageToImgur(storyImageBuffer);
+                const instagramStoryResponse = await submitInstagramImage(storyImageURL, ayah, true)
 
                 res.send({message: 'image uploaded successfully'})
             }

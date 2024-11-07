@@ -1,12 +1,14 @@
-const submitInstagramImage = async (imageBuffer, ayah, isStory) => {
-    const formData = new FormData();
-    formData.append('image', imageBuffer, 'image.jpg');
-    formData.append('caption', `${ayah.ayah_en}\n${ayah.surah_name_ar} / ${ayah.surah_name_roman} - ${ayah.ayah_no_surah}`);
-    formData.append('access_token', process.env.INSTAGRAM_ACCESS_TOKEN);
-    if (isStory) formData.append('is_stories', 'true');
+const submitInstagramImage = async (imageUrl, ayah, isStory) => {
+    const caption= `${ayah.ayah_en}\n${ayah.surah_name_ar} / ${ayah.surah_name_roman} - ${ayah.ayah_no_surah}`;
+    const body = new URLSearchParams({
+        image_url: imageUrl,
+        caption,
+        access_token: process.env.INSTAGRAM_ACCESS_TOKEN,
+    });
+    if (isStory) body.append('media_type', 'STORIES');
     const mediaResponse = await fetch(`https://graph.facebook.com/v21.0/${process.env.INSTAGRAM_USER_ID}/media`, {
         method: 'POST',
-        body: formData,
+        body: body,
     });
     const mediaResponseData = await mediaResponse.json();
 

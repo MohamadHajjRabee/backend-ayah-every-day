@@ -9,6 +9,7 @@ const cloudinary = require ('cloudinary').v2;
 const CRON_SECRET = process.env.CRON_SECRET
 const PORT = process.env.PORT || 3000;
 const {submitInstagramImage} = require("./submitInstagramImage");
+const {generateStoryImage} = require("./generateStoryImage");
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
 });
@@ -65,7 +66,10 @@ app.get('/updateActiveAyah', async (req, res) => {
                     }
                 };
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
-                const instagramResponse = await submitInstagramImage(imageBuffer, ayah)
+                const instagramPostResponse = await submitInstagramImage(imageBuffer, ayah, false)
+                const storyImageBuffer = await generateStoryImage(imageBuffer)
+                const instagramStoryResponse = await submitInstagramImage(storyImageBuffer, ayah, true)
+
                 res.send({message: 'image uploaded successfully'})
             }
         } catch (e) {

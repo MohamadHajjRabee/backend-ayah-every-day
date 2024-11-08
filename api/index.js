@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const {submitInstagramImage} = require("./submitInstagramImage");
 const {generateStoryImage} = require("./generateStoryImage");
 const {uploadImageToImgur} = require("./uploadImageToImgur");
+const {deleteImgurImage} = require("./deleteImgurImage");
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
 });
@@ -68,12 +69,15 @@ app.get('/updateActiveAyah', async (req, res) => {
                 };
                 const tweetResponse = await twitterClient.v2.tweet(tweet);
 
-                const postImageURL = await uploadImageToImgur(imageBuffer);
-                const instagramPostResponse = await submitInstagramImage(postImageURL, ayah, false)
+                const {deleteHash, link} = await uploadImageToImgur(imageBuffer);
+                const instagramPostResponse = await submitInstagramImage(link, ayah, false)
+                await deleteImgurImage(deleteHash)
 
                 const storyImageBuffer = await generateStoryImage(imageBuffer)
-                const storyImageURL = await uploadImageToImgur(storyImageBuffer);
+                const {deleteHash: storyDeleteHash, link: storyImageURL} = await uploadImageToImgur(storyImageBuffer);
                 const instagramStoryResponse = await submitInstagramImage(storyImageURL, ayah, true)
+                await deleteImgurImage(storyDeleteHash)
+
 
                 res.send({message: 'image uploaded successfully'})
             }

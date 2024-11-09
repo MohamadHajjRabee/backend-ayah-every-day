@@ -17,7 +17,7 @@ const uploadImageToImgur = async (imageBuffer) => {
         throw new Error('Failed to upload image to Imgur');
     }
 
-    return {deleteHash: data.data.deleteHash, link: data.data.link};
+    return {deleteHash: data.data.deletehash, link: data.data.link};
 }
 
 module.exports = {uploadImageToImgur}

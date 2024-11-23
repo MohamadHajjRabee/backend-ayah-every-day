@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@logtail/node": "^0.5.2",
     "@napi-rs/canvas": "^0.1.56",
     "cloudinary": "^2.5.0",
     "cors": "^2.8.5",

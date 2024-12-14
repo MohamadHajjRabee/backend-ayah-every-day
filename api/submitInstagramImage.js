@@ -1,5 +1,8 @@
 const submitInstagramImage = async (imageUrl, ayah, isStory) => {
-    const caption= `${ayah.ayah_en}\n${ayah.surah_name_ar} / ${ayah.surah_name_roman} - ${ayah.ayah_no_surah}`;
+    const hashtags = `#Quran #قرآن #Islam #الإسلام #QuranicVerses #آية #QuranVerses #آيات_قرآنية #QuranDaily #قرآن_كريم #AyahOfTheDay #آية_اليوم`;
+
+    const caption = `${ayah.ayah_en}\n${ayah.surah_name_ar} / ${ayah.surah_name_roman} - ${ayah.ayah_no_surah}\n\n${hashtags}`;
+
     const body = new URLSearchParams({
         image_url: imageUrl,
         caption,

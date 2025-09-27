@@ -87,7 +87,7 @@ const generateImage = async (image, ayah) => {
         lines.forEach((line, index) => {
             const yPos = textY + (index * lineHeight);
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(line, textX, yPos);
+            ctx.fillText(line, textX + 15, yPos);
         });
         const imageBuffer = canvas.toBuffer('image/jpeg');
         const imageSize = imageBuffer.byteLength;

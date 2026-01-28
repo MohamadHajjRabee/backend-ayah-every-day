@@ -20,7 +20,7 @@ function registerPageFont(pageNumber) {
         return fontName;
     }
     
-    const fontPath = resolve(`./fonts/v1/p${pageNumber}.ttf`);
+    const fontPath = resolve(`./fonts/v1/p${pageNumber}.woff2`);
     
     if (!fs.existsSync(fontPath)) {
         throw new Error(`Font file not found: ${fontPath}`);

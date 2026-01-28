@@ -3,18 +3,17 @@
   "version": "1.0.0",
   "main": "api/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node api/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Backend for Ayah Every Day - Daily Quran verse social media poster",
   "dependencies": {
     "@logtail/node": "^0.5.2",
     "@napi-rs/canvas": "^0.1.56",
     "cloudinary": "^2.5.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "pg": "^8.12.0",
     "sharp": "^0.33.5",

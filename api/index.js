@@ -1,24 +1,22 @@
 const express = require('express');
-const dotenv = require('dotenv');
-const {updateActiveAyah} = require('./updateActiveAyah.js')
 const { Pool } = require('pg');
-const cors = require('cors')
-const { TwitterApi, EUploadMimeType} = require('twitter-api-v2');
-
-const {generateImage} = require('./generateImage.js')
-const cloudinary = require ('cloudinary').v2;
-const CRON_SECRET = process.env.CRON_SECRET
-const PORT = process.env.PORT || 3000;
-const {submitInstagramImage} = require("./submitInstagramImage");
-const {generateStoryImage} = require("./generateStoryImage");
-const {uploadImageToImgur} = require("./uploadImageToImgur");
-const {deleteImgurImage} = require("./deleteImgurImage");
+const cors = require('cors');
+const { TwitterApi, EUploadMimeType } = require('twitter-api-v2');
+const cloudinary = require('cloudinary').v2;
 const { Logtail } = require("@logtail/node");
-const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN);
 
-const pool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-});
+const { updateActiveAyah } = require('./updateActiveAyah.js');
+const { generateImage } = require('./generateImage.js');
+const { generateStoryImage } = require("./generateStoryImage");
+const { submitInstagramImage } = require("./submitInstagramImage");
+const { uploadImageToImgur } = require("./uploadImageToImgur");
+const { deleteImgurImage } = require("./deleteImgurImage");
+
+const CRON_SECRET = process.env.CRON_SECRET;
+const PORT = process.env.PORT || 3000;
+
+const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN);
+const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
@@ -26,16 +24,12 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const userClient = new TwitterApi({
-    appKey:  process.env.API_KEY,
-    appSecret:  process.env.API_SECRET,
-    accessToken:  process.env.ACCESS_TOKEN,
-    accessSecret:  process.env.ACCESS_SECRET,
-});
-
-const bearer = new TwitterApi(process.env.BEARER_TOKEN);
-const twitterClient = userClient.readWrite;
-const twitterBearer = bearer.readOnly;
+const twitterClient = new TwitterApi({
+    appKey: process.env.API_KEY,
+    appSecret: process.env.API_SECRET,
+    accessToken: process.env.ACCESS_TOKEN,
+    accessSecret: process.env.ACCESS_SECRET,
+}).readWrite;
 
 
 const app = express();
@@ -49,14 +43,13 @@ app.get('/updateActiveAyah', async (req, res) => {
         return;
     }
     try {
-        const updateRes = await updateActiveAyah();
-        const { rows: dataRows } = await pool.query('SELECT * FROM data');
-        let ayah;
+        const ayahId = await updateActiveAyah(pool);
+        const { rows: quranRows } = await pool.query('SELECT * FROM quran WHERE id = $1', [ayahId]);
+        const ayah = quranRows[0];
 
-        if (dataRows[0]) {
-            const { id } = dataRows[0];
-            const { rows: quranRows } = await pool.query('SELECT * FROM quran WHERE id = $1', [id]);
-            ayah = quranRows[0];
+        if (!ayah) {
+            res.status(404).json({ message: 'Ayah not found' });
+            return;
         }
 
         const result = await cloudinary.api.resources({
@@ -65,48 +58,54 @@ app.get('/updateActiveAyah', async (req, res) => {
             max_results: 100,
         });
 
-        if (result && result.resources.length > 0 && ayah) {
+        if (result?.resources?.length > 0) {
             const randomIndex = Math.floor(Math.random() * result.resources.length);
             const randomImage = result.resources[randomIndex].secure_url ||
                 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
-            const imageBuffer = await generateImage(randomImage, ayah.ayah_ar);
+            // Pass full ayah object for glyph rendering (uses page_number and code_v1)
+            const imageBuffer = await generateImage(randomImage, ayah);
 
+            // Post to Twitter
             const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, { mimeType: EUploadMimeType.Jpeg });
             await twitterClient.v2.tweet({ media: { media_ids: [mediaUploadResponse] } });
 
+            // Post to Instagram (post + story)
             const { deleteHash, link } = await uploadImageToImgur(imageBuffer);
-            const instagramPostResponse = await submitInstagramImage(link, ayah, false);
+            await submitInstagramImage(link, ayah, false);
             await deleteImgurImage(deleteHash);
 
             const storyImageBuffer = await generateStoryImage(imageBuffer);
             const { deleteHash: storyDeleteHash, link: storyImageURL } = await uploadImageToImgur(storyImageBuffer);
-            const instagramStoryResponse = await submitInstagramImage(storyImageURL, ayah, true);
+            await submitInstagramImage(storyImageURL, ayah, true);
             await deleteImgurImage(storyDeleteHash);
 
-            res.send({ message: 'Image uploaded successfully' });
             await logtail.info('Cron job completed successfully', { ayah });
+            res.json({ message: 'Image uploaded successfully', ayahId });
+        } else {
+            res.status(500).json({ message: 'No background images available' });
         }
     } catch (error) {
         await logtail.error('Error during cron job', { error: error.message });
-        res.status(error.status || 500).send({ message: 'Error: ' + error.message });
+        res.status(500).json({ message: 'Error: ' + error.message });
     }
 });
 
 app.get('/ayah', async (req, res) => {
     try {
-        const {rows : dataRows} = await pool.query('SELECT * FROM data')
-        if(dataRows[0]){
-            const {id} = dataRows[0]
-            const {rows : quranRows} = await pool.query('SELECT * FROM quran WHERE id = $1', [id])
-            if(quranRows[0]){
-                res.status(200).json(quranRows[0]);
-            }
+        const { rows: dataRows } = await pool.query('SELECT * FROM data');
+        if (!dataRows[0]) {
+            return res.status(404).json({ message: 'No active ayah found' });
         }
-    }catch (e) {
-        res.status(e.status || 500).json({message: 'Error: ' + e.message})
+        const { id } = dataRows[0];
+        const { rows: quranRows } = await pool.query('SELECT * FROM quran WHERE id = $1', [id]);
+        if (!quranRows[0]) {
+            return res.status(404).json({ message: 'Ayah not found' });
+        }
+        res.json(quranRows[0]);
+    } catch (e) {
+        res.status(500).json({ message: 'Error: ' + e.message });
     }
 });
-
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

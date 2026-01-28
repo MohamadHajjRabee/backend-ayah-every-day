@@ -1,25 +1,71 @@
-const {loadImage, createCanvas, GlobalFonts} = require("@napi-rs/canvas");
-const { resolve} = require("path");
+const { loadImage, createCanvas, GlobalFonts } = require("@napi-rs/canvas");
+const { resolve } = require("path");
 const sharp = require('sharp');
+const fs = require('fs');
+
 const MAX_SIZE = 5 * 1024 * 1024;
+
+// Cache for registered fonts to avoid re-registering
+const registeredFonts = new Set();
+
+/**
+ * Register a QCF V2 font for a specific page
+ * @param {number} pageNumber - The Quran page number (1-604)
+ * @returns {string} The font family name to use
+ */
+function registerPageFont(pageNumber) {
+    const fontName = `QCF2${pageNumber.toString().padStart(3, '0')}`;
+    
+    if (registeredFonts.has(fontName)) {
+        return fontName;
+    }
+    
+    const fontPath = resolve(`./fonts/v1/p${pageNumber}.ttf`);
+    
+    if (!fs.existsSync(fontPath)) {
+        throw new Error(`Font file not found: ${fontPath}`);
+    }
+    
+    GlobalFonts.registerFromPath(fontPath, fontName);
+    registeredFonts.add(fontName);
+    
+    return fontName;
+}
+
+/**
+ * Wrap glyph code text into multiple lines
+ * Each character in the glyph code represents a word
+ */
 function wrapText(ctx, text, maxWidth) {
-    const words = text.split(' ');
+    // For glyph codes, each character represents a word
+    const words = text.split('').filter(c => c.trim().length > 0);
     let lines = [];
     let line = '';
+    
     for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
+        const testLine = line + words[n];
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
+        
         if (testWidth > maxWidth && n > 0) {
             lines.push(line);
-            line = words[n] + ' ';
+            line = words[n];
         } else {
             line = testLine;
         }
     }
-    lines.push(line);
+    
+    if (line) {
+        lines.push(line);
+    }
+    
+    // If no lines were created, force at least one line
+    if (lines.length === 0 && text.length > 0) {
+        lines.push(text);
+    }
+    
     const maxLength = Math.max(...lines.map(str => ctx.measureText(str).width));
-    return {maxLength, lines};
+    return { maxLength, lines };
 }
 
 function drawRoundedRect(ctx, x, y, width, height, radius) {
@@ -36,45 +82,65 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
     ctx.fill();
 }
-async function compressImage(imageBuffer, quality){
-    const compressedBuffer = await sharp(imageBuffer).jpeg({quality}).toBuffer()
-    if(compressedBuffer.byteLength > MAX_SIZE){
-        return await compressImage(compressedBuffer, quality - 10)
-    }else{
-        return compressedBuffer
+
+async function compressImage(imageBuffer, quality) {
+    const compressedBuffer = await sharp(imageBuffer).jpeg({ quality }).toBuffer();
+    if (compressedBuffer.byteLength > MAX_SIZE) {
+        return await compressImage(compressedBuffer, quality - 10);
     }
+    return compressedBuffer;
 }
 
-const generateImage = async (image, ayah) => {
-
+/**
+ * Generate an image with Quranic verse using QCF glyph rendering
+ * @param {string} backgroundImageUrl - URL of the background image
+ * @param {Object} ayah - Ayah object containing page_number and code_v2
+ */
+const generateImage = async (backgroundImageUrl, ayah) => {
     try {
-        GlobalFonts.registerFromPath(resolve('./ScheherazadeNew-Regular.ttf'), 'Scheherazade New')
-        const background = await loadImage(image);
+        const background = await loadImage(backgroundImageUrl);
         const canvas = createCanvas(background.width, background.height);
         const ctx = canvas.getContext('2d');
+        
+        // Draw background
         ctx.drawImage(background, 0, 0, background.width, background.height);
-        const fontSizeScale = ayah.length > 300 ? 0.035 : 0.05
-        const fontSize = Math.floor(background.width * fontSizeScale)
-        const text = ayah
-        const maxWidth = background.width * 0.9;
-        const lineHeight = fontSize * 2.2;
+        
+        // Validate required fields
+        if (!ayah.page_number || !ayah.code_v2) {
+            throw new Error('Missing required glyph data (page_number or code_v2)');
+        }
+        
+        // Use QCF V2 glyph rendering
+        const fontName = registerPageFont(ayah.page_number);
+        const text = ayah.code_v2;
+        
+        // Calculate font size based on text length and image size
+        const textLength = text.length;
+        const fontSizeScale = textLength > 100 ? 0.035 : textLength > 50 ? 0.045 : 0.055;
+        const fontSize = Math.floor(background.width * fontSizeScale);
+        const maxWidth = background.width * 0.85;
+        const lineHeight = fontSize * 1.8;
         const radius = 25;
-        ctx.font = `${fontSize}px "Scheherazade New"`;
+        
+        // Set up text rendering
+        ctx.font = `${fontSize}px "${fontName}"`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.direction = 'rtl';
-
-        const {maxLength, lines} = wrapText(ctx, text, maxWidth);
-        const backgroundWidth = maxLength;
-
-        const padding = 20;
+        
+        // Wrap text into lines
+        const { maxLength, lines } = wrapText(ctx, text, maxWidth);
+        const backgroundWidth = Math.max(maxLength, 200);
+        
+        const padding = 30;
         const textBlockHeight = lines.length * lineHeight + padding;
-        const textBlockWidth = backgroundWidth + padding;
-
+        const textBlockWidth = backgroundWidth + padding * 2;
+        
         const textX = canvas.width / 2;
         const textY = canvas.height / 2 - (textBlockHeight / 2) + (lineHeight / 2);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        
+        // Draw semi-transparent background for text
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         drawRoundedRect(
             ctx,
             textX - textBlockWidth / 2,
@@ -83,23 +149,25 @@ const generateImage = async (image, ayah) => {
             textBlockHeight,
             radius
         );
-
+        
+        // Draw text lines
         lines.forEach((line, index) => {
             const yPos = textY + (index * lineHeight);
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(line, textX + 15, yPos);
+            ctx.fillText(line, textX, yPos);
         });
+        
+        // Generate buffer and compress if needed
         const imageBuffer = canvas.toBuffer('image/jpeg');
-        const imageSize = imageBuffer.byteLength;
-        if(imageSize > MAX_SIZE) {
-            return await compressImage(imageBuffer, 100);
-        }else{
-            return imageBuffer
+        
+        if (imageBuffer.byteLength > MAX_SIZE) {
+            return await compressImage(imageBuffer, 90);
         }
+        
+        return imageBuffer;
     } catch (error) {
-        throw new Error('Error: ' + error.message)
-
+        throw new Error('Error generating image: ' + error.message);
     }
-}
+};
 
-module.exports = {generateImage}
+module.exports = { generateImage };

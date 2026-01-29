@@ -2,31 +2,53 @@ const { loadImage, createCanvas, GlobalFonts } = require("@napi-rs/canvas");
 const { resolve } = require("path");
 const sharp = require('sharp');
 const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const MAX_SIZE = 5 * 1024 * 1024;
+const FONT_CDN_URL = 'https://verses.quran.foundation/fonts/quran/hafs/v1/ttf';
 
-// Cache for registered fonts to avoid re-registering
+// Cache for registered fonts to avoid re-downloading
 const registeredFonts = new Set();
 
 /**
- * Register a QCF V2 font for a specific page
+ * Download and register a QCF font for a specific page
+ * Uses temp directory caching for Vercel serverless functions
  * @param {number} pageNumber - The Quran page number (1-604)
- * @returns {string} The font family name to use
+ * @returns {Promise<string>} The font family name to use
  */
-function registerPageFont(pageNumber) {
-    const fontName = `QCF2${pageNumber.toString().padStart(3, '0')}`;
+async function registerPageFont(pageNumber) {
+    const fontName = `QCF_P${pageNumber.toString().padStart(3, '0')}`;
     
+    // Check in-memory cache first (fastest)
     if (registeredFonts.has(fontName)) {
         return fontName;
     }
     
-    const fontPath = resolve(`./fonts/v1/p${pageNumber}.woff2`);
+    const tempFontPath = path.join(os.tmpdir(), `qcf_p${pageNumber}.ttf`);
     
-    if (!fs.existsSync(fontPath)) {
-        throw new Error(`Font file not found: ${fontPath}`);
+    // Check if font exists in temp directory (persists during warm invocations)
+    if (fs.existsSync(tempFontPath)) {
+        GlobalFonts.registerFromPath(tempFontPath, fontName);
+        registeredFonts.add(fontName);
+        return fontName;
     }
     
-    GlobalFonts.registerFromPath(fontPath, fontName);
+    // Download font from CDN
+    const fontUrl = `${FONT_CDN_URL}/p${pageNumber}.ttf`;
+    const response = await fetch(fontUrl);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to download font for page ${pageNumber}: ${response.status}`);
+    }
+    
+    const fontBuffer = Buffer.from(await response.arrayBuffer());
+    
+    // Save to temp directory
+    fs.writeFileSync(tempFontPath, fontBuffer);
+    
+    // Register the font
+    GlobalFonts.registerFromPath(tempFontPath, fontName);
     registeredFonts.add(fontName);
     
     return fontName;
@@ -110,8 +132,8 @@ const generateImage = async (backgroundImageUrl, ayah) => {
             throw new Error('Missing required glyph data (page_number or code_v2)');
         }
         
-        // Use QCF V2 glyph rendering
-        const fontName = registerPageFont(ayah.page_number);
+        // Download and register QCF font for this page
+        const fontName = await registerPageFont(ayah.page_number);
         const text = ayah.code_v2;
         
         // Calculate font size based on text length and image size

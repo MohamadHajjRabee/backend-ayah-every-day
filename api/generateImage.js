@@ -128,13 +128,13 @@ const generateImage = async (backgroundImageUrl, ayah) => {
         ctx.drawImage(background, 0, 0, background.width, background.height);
         
         // Validate required fields
-        if (!ayah.page_number || !ayah.code_v2) {
-            throw new Error('Missing required glyph data (page_number or code_v2)');
+        if (!ayah.page_number || !ayah.code_v1) {
+            throw new Error('Missing required glyph data (page_number or code_v1)');
         }
         
         // Download and register QCF font for this page
         const fontName = await registerPageFont(ayah.page_number);
-        const text = ayah.code_v2;
+        const text = ayah.code_v1;
         
         // Calculate font size based on text length and image size
         const textLength = text.length;

@@ -62,22 +62,37 @@ app.get('/updateActiveAyah', async (req, res) => {
             const randomIndex = Math.floor(Math.random() * result.resources.length);
             const randomImage = result.resources[randomIndex].secure_url ||
                 'https://res.cloudinary.com/djrnhlouu/image/upload/v1728135066/Ayah%20Every%20Day/ofjnxsblalm70wag6voa.jpg';
-            // Pass full ayah object for glyph rendering (uses page_number and code_v1)
+            
+            // Generate main image
             const imageBuffer = await generateImage(randomImage, ayah);
 
-            // Post to Twitter
-            const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, { mimeType: EUploadMimeType.Jpeg });
-            await twitterClient.v2.tweet({ media: { media_ids: [mediaUploadResponse] } });
-
-            // Post to Instagram (post + story)
-            const { deleteHash, link } = await uploadImageToImgur(imageBuffer);
-            await submitInstagramImage(link, ayah, false);
-            await deleteImgurImage(deleteHash);
-
+            // Generate story image (can start immediately, no dependency)
             const storyImageBuffer = await generateStoryImage(imageBuffer);
-            const { deleteHash: storyDeleteHash, link: storyImageURL } = await uploadImageToImgur(storyImageBuffer);
-            await submitInstagramImage(storyImageURL, ayah, true);
-            await deleteImgurImage(storyDeleteHash);
+
+            // Upload both images to Imgur in parallel
+            const [imgurResult, storyImgurResult] = await Promise.all([
+                uploadImageToImgur(imageBuffer),
+                uploadImageToImgur(storyImageBuffer)
+            ]);
+
+            // Post to Twitter and Instagram in parallel
+            const [twitterResult, instagramPostResult, instagramStoryResult] = await Promise.all([
+                // Twitter
+                (async () => {
+                    const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, { mimeType: EUploadMimeType.Jpeg });
+                    return twitterClient.v2.tweet({ media: { media_ids: [mediaUploadResponse] } });
+                })(),
+                // Instagram Post
+                submitInstagramImage(imgurResult.link, ayah, false),
+                // Instagram Story
+                submitInstagramImage(storyImgurResult.link, ayah, true)
+            ]);
+
+            // Delete Imgur images in parallel (fire and forget)
+            Promise.all([
+                deleteImgurImage(imgurResult.deleteHash),
+                deleteImgurImage(storyImgurResult.deleteHash)
+            ]).catch(() => {}); // Ignore errors on cleanup
 
             await logtail.info('Cron job completed successfully', { ayah });
             res.json({ message: 'Image uploaded successfully', ayahId });
@@ -90,7 +105,7 @@ app.get('/updateActiveAyah', async (req, res) => {
     }
 });
 
-app.get('/ayah', async (req, res) => {
+app.get('/ayah', async (res) => {
     try {
         const { rows: dataRows } = await pool.query('SELECT * FROM data');
         if (!dataRows[0]) {

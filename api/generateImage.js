@@ -6,7 +6,7 @@ const path = require('path');
 const os = require('os');
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const FONT_CDN_URL = 'https://verses.quran.foundation/fonts/quran/hafs/v1/ttf';
+const FONT_CDN_URL = 'https://raw.githubusercontent.com/quran/quran.com-frontend-next/production/public/fonts/quran/hafs/v1/ttf';
 
 // Cache for registered fonts to avoid re-downloading
 const registeredFonts = new Set();

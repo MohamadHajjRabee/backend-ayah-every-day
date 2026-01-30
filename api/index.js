@@ -80,7 +80,7 @@ app.get('/updateActiveAyah', async (req, res) => {
                 // Twitter
                 (async () => {
                     const mediaUploadResponse = await twitterClient.v1.uploadMedia(imageBuffer, { mimeType: EUploadMimeType.Jpeg });
-                    return twitterClient.v2.tweet({ media: { media_ids: [mediaUploadResponse] } });
+                    return twitterClient.v2.tweet({ media: { media_ids: [mediaUploadResponse] } , text: `${ayah.ayah_en}\n\n#Quran #AyahOfTheDay` });
                 })(),
                 // Instagram Post
                 submitInstagramImage(imgurResult.link, ayah, false),

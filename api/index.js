@@ -105,7 +105,7 @@ app.get('/updateActiveAyah', async (req, res) => {
     }
 });
 
-app.get('/ayah', async (res) => {
+app.get('/ayah', async (req, res) => {
     try {
         const { rows: dataRows } = await pool.query('SELECT * FROM data');
         if (!dataRows[0]) {
